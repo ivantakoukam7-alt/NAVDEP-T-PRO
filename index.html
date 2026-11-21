@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PhotoStudio Réel — Création de Photos Réalistes</title>
+  <meta name="theme-color" content="#111827" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --surface: #ffffff;
+      --surface-alt: #eef0f4;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #111827;
+      --accent: #0f766e;
+      --border: #e5e7eb;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo span.tag {
+      font-size: 10px;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--surface-alt); color: var(--text); }
+    .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 50%; }
+
+    .view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .view.active { display: flex; }
+
+    .photo-stage {
+      flex: 0 0 43%;
+      position: relative;
+      background: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #photoCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .badge-top {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .pill {
+      background: rgba(17, 24, 39, 0.78);
+      color: #fff;
+      backdrop-filter: blur(8px);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      pointer-events: auto;
+    }
+
+    .controls-left {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      display: flex;
+      gap: 7px;
+    }
+
+    .controls-right {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--text);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+    }
+
+    .picker {
+      flex: 1;
+      background: var(--surface);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      margin-top: -8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 10;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+    }
+
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      padding: 8px 10px 4px;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex: 0 0 auto;
+      border: none;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 11px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: var(--surface-alt);
+      color: var(--primary);
+    }
+
+    .filters {
+      display: flex;
+      gap: 7px;
+      padding: 8px 12px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+
+    .filter-ctrl {
+      background: var(--surface-alt);
+      border: none;
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+    }
+
+    .realism-box {
+      display: none;
+      padding: 10px 12px;
+      background: #f9fafb;
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      gap: 8px;
+    }
+    .realism-box.open { display: flex; }
+
+    .r-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      gap: 10px;
+    }
+
+    .r-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 210px;
+    }
+
+    .r-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    input[type="range"] { flex: 1; accent-color: var(--accent); }
+
+    .grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      align-content: start;
+    }
+
+    @media (min-width: 640px) {
+      .grid { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    .card {
+      background: var(--surface-alt);
+      border-radius: 13px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      min-height: 112px;
+    }
+
+    .card.active {
+      border-color: var(--accent);
+      background: #f0fdfa;
+    }
+
+    .swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      margin-bottom: 5px;
+    }
+
+    .c-name {
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+
+    .c-brand {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--muted);
+    }
+
+    .luxe {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 8px;
+      font-weight: 800;
+      background: #111827;
+      color: #fbbf24;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .page-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .panel h2 { font-size: 15px; margin-bottom: 10px; }
+
+    .prompt-box {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 11px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 11px;
+    }
+    .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .field input, .field select {
+      padding: 9px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 13px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .stat { background: var(--surface-alt); padding: 10px; border-radius: 12px; }
+    .stat strong { font-size: 18px; display: block; }
+    .stat span { font-size: 11px; color: var(--muted); }
+
+    .history-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .history-list { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .h-card {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      overflow: hidden;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+    }
+    .h-card img { width: 100%; height: 155px; object-fit: cover; background: #e5e7eb; }
+    .h-body { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+    .h-date { font-size: 10px; color: var(--muted); }
+    .h-items { font-size: 11px; font-weight: 700; line-height: 1.25; }
+
+    .bottom-nav {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 7px 0;
+      z-index: 20;
+    }
+    .nav-item {
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .nav-item.active { color: var(--primary); }
+
+    .toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-16px);
+      background: #111827;
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 99;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span>PhotoStudio</span>
+      <span class="tag">Réel</span>
+    </div>
+    <div class="top-actions">
+      <label class="btn btn-secondary" for="photoUpload">
+        📷 Galerie
+      </label>
+      <input type="file" id="photoUpload" accept="image/*" hidden />
+      <button class="btn btn-primary" id="saveBtn">Enregistrer</button>
+    </div>
+  </header>
+
+  <div id="toast" class="toast">Enregistré</div>
+
+  <main id="view-studio" class="view active">
+    <section class="photo-stage">
+      <div class="badge-top">
+        <div class="pill" id="modeBadge">📸 Rendu Photo Réelle • Prêt pour Profil</div>
+        <button class="btn glass" style="padding: 5px 10px; font-size: 11px;" id="toggleRealism">
+          🎚️ Réglages Photo
+        </button>
+      </div>
+
+      <canvas id="photoCanvas" width="440" height="540"></canvas>
+
+      <div class="controls-left">
+        <button class="btn btn-icon glass" id="undoBtn" title="Annuler">↩️</button>
+        <button class="btn btn-icon glass" id="redoBtn" title="Rétablir">↪️</button>
+      </div>
+
+      <div class="controls-right">
+        <div style="display:flex; gap:6px;">
+          <button class="btn glass" style="padding: 6px 10px; font-size: 11px;" id="clearBtn">Désélectionner</button>
+          <button class="btn btn-accent" style="padding: 6px 10px; font-size: 11px;" id="exportBtn">⬇️ Exporter</button>
+        </div>
+        <button class="btn btn-primary" style="padding: 6px 11px; font-size: 11px;" id="generateRealBtn">
+          ✨ Générer Photo Réelle
+        </button>
+      </div>
+    </section>
+
+    <section class="picker">
+      <div class="tabs" id="catTabs"></div>
+
+      <div class="filters">
+        <input type="text" id="searchBox" class="filter-ctrl" placeholder="🔍 Pièce ou marque..." style="width:135px;" />
+        <select id="brandSelect" class="filter-ctrl">
+          <option value="ALL">Toutes marques</option>
+        </select>
+        <select id="sortSelect" class="filter-ctrl">
+          <option value="default">Trier : Défaut</option>
+          <option value="brand">Trier : Marque A-Z</option>
+          <option value="luxury">Trier : Luxe & Grandes Maisons</option>
+        </select>
+      </div>
+
+      <div class="realism-box" id="realismBox">
+        <div class="r-row">
+          <span>Coupe & Tombé (taille)</span>
+          <div class="r-ctrl">
+            <button class="r-btn" onclick="stepSlider('fit', -4)">-</button>
+            <input type="range" id="sFit" min="85" max="115" value="100" />
+            <button class="r-btn" onclick="stepSlider('fit', 4)">+</button>
+          </div>
+        </div>
+        <div class="r-row">
+          <span>Plis & Ombres Tissu</span>
+          <div class="r-ctrl">
+            <button class="r-btn" onclick="stepSlider('drape', -10)">-</button>
+            <input type="range" id="sDrape" min="0" max="100" value="70" />
+            <button class="r-btn" onclick="stepSlider('drape', 10)">+</button>
+          </div>
+        </div>
+        <div class="r-row">
+          <span>Lumière Naturelle Photo</span>
+          <div class="r-ctrl">
+            <button class="r-btn" onclick="stepSlider('light', -8)">-</button>
+            <input type="range" id="sLight" min="60" max="140" value="100" />
+            <button class="r-btn" onclick="stepSlider('light', 8)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="catalogGrid"></div>
+    </section>
+  </main>
+
+  <main id="view-history" class="view">
+    <div class="page-scroll">
+      <div class="panel">
+        <h2>Prompt Photo-Réaliste Généré (Prêt à copier)</h2>
+        <div class="prompt-box" id="livePrompt"></div>
+        <button class="btn btn-accent" id="copyPromptBtn">📋 Copier le prompt photo</button>
+      </div>
+
+      <div class="panel">
+        <h2>Historique de tes créations</h2>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </main>
+
+  <main id="view-profile" class="view">
+    <div class="page-scroll">
+      <div class="panel">
+        <h2>Aperçu du compte</h2>
+        <div class="stats">
+          <div class="stat">
+            <strong id="stSaved">0</strong>
+            <span>Photos créées</span>
+          </div>
+          <div class="stat">
+            <strong id="stBrands">0</strong>
+            <span>Marques</span>
+          </div>
+          <div class="stat">
+            <strong id="stPieces">0</strong>
+            <span>Pièces réelles</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Informations personnelles (pour le rendu humain)</h2>
+        <div class="field">
+          <label>Nom ou Pseudo</label>
+          <input type="text" id="pName" placeholder="Ton nom ou pseudo" />
+        </div>
+        <div class="field">
+          <label>Taille standard de vêtement humain</label>
+          <select id="pSize">
+            <option value="S">Taille S</option>
+            <option value="M" selected>Taille M</option>
+            <option value="L">Taille L</option>
+            <option value="XL">Taille XL</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contexte / Lieu de photo de profil</label>
+          <select id="pSetting">
+            <option value="rue urbaine naturelle en lumière de jour">Rue urbaine (lumière du jour)</option>
+            <option value="extérieur en fin d'après-midi golden hour">Extérieur fin d'après-midi</option>
+            <option value="intérieur moderne sobre et lumineux">Intérieur moderne lumineux</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center; padding:11px;" id="saveProfileBtn">
+          Enregistrer mon profil
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="view-studio">
+      <span style="font-size:17px;">📸</span>
+      <span>Créer</span>
+    </button>
+    <button class="nav-item" data-view="view-history">
+      <span style="font-size:17px;">🕒</span>
+      <span>Historique</span>
+    </button>
+    <button class="nav-item" data-view="view-profile">
+      <span style="font-size:17px;">👤</span>
+      <span>Profil</span>
+    </button>
+  </nav>
+
+  <script>
+    const CATS = [
+      { id: "outfits", name: "Tenues", icon: "🧥" },
+      { id: "tops", name: "Hauts", icon: "👕" },
+      { id: "bottoms", name: "Bas", icon: "👖" },
+      { id: "jackets", name: "Vestes", icon: "🧥" },
+      { id: "shoes", name: "Chaussures", icon: "👟" },
+      { id: "socks", name: "Chaussettes", icon: "🧦" },
+      { id: "bags", name: "Sacs", icon: "🎒" },
+      { id: "hats", name: "Chapeaux", icon: "🧢" },
+      { id: "glasses", name: "Lunettes", icon: "🕶️" },
+      { id: "jewelry", name: "Bijoux", icon: "⌚" }
+    ];
+
+    const ITEMS = [
+      { id: "o1", cat: "outfits", name: "Survêtement 3 Bandes", brand: "Adidas", color: "#18181b", accent: "#ffffff", luxe: false },
+      { id: "o2", cat: "outfits", name: "Ensemble Tech Fleece", brand: "Nike", color: "#9ca3af", accent: "#111827", luxe: false },
+      { id: "o3", cat: "outfits", name: "Costume Tailored Laine", brand: "Dior", color: "#1e293b", accent: "#e2e8f0", luxe: true },
+      { id: "o4", cat: "outfits", name: "Ensemble Denim Monogram", brand: "Louis Vuitton", color: "#1d4ed8", accent: "#bfdbfe", luxe: true },
+      { id: "o5", cat: "outfits", name: "Tracksuit Bande Web", brand: "Gucci", color: "#14532d", accent: "#dc2626", luxe: true },
+      { id: "o6", cat: "outfits", name: "Survêtement Sport T7", brand: "Puma", color: "#111827", accent: "#ef4444", luxe: false },
+      { id: "t1", cat: "tops", name: "T-Shirt Box Logo", brand: "Supreme", color: "#ffffff", accent: "#dc2626", luxe: true },
+      { id: "t2", cat: "tops", name: "T-Shirt Graphique", brand: "Off-White", color: "#111827", accent: "#ffffff", luxe: true },
+      { id: "t3", cat: "tops", name: "Polo Piqué Classique", brand: "Ralph Lauren", color: "#1e3a8a", accent: "#ef4444", luxe: false },
+      { id: "t4", cat: "tops", name: "Polo Crocodile", brand: "Lacoste", color: "#15803d", accent: "#ffffff", luxe: false },
+      { id: "t5", cat: "tops", name: "Maillot Basket #23", brand: "Jordan", color: "#b91c1c", accent: "#111827", luxe: false },
+      { id: "t6", cat: "tops", name: "T-Shirt Pocket Coton", brand: "Carhartt", color: "#78350f", accent: "#f59e0b", luxe: false },
+      { id: "t7", cat: "tops", name: "T-Shirt Oversize", brand: "Fear of God", color: "#d6d3d1", accent: "#44403c", luxe: true },
+      { id: "t8", cat: "tops", name: "T-Shirt World Tour", brand: "Stüssy", color: "#18181b", accent: "#facc15", luxe: false },
+      { id: "t9", cat: "tops", name: "Chemise Lin Coupe Slim", brand: "Zara", color: "#f8fafc", accent: "#94a3b8", luxe: false },
+      { id: "t10", cat: "tops", name: "Surchemise Coton Neutre", brand: "Mango", color: "#a8a29e", accent: "#57534e", luxe: false },
+      { id: "b1", cat: "bottoms", name: "Jean 501 Droit", brand: "Levi's", color: "#2563eb", accent: "#93c5fd", luxe: false },
+      { id: "b2", cat: "bottoms", name: "Cargo Multipoches", brand: "Stone Island", color: "#18181b", accent: "#facc15", luxe: true },
+      { id: "b3", cat: "bottoms", name: "Jean Baggy Brut", brand: "Balenciaga", color: "#374151", accent: "#9ca3af", luxe: true },
+      { id: "b4", cat: "bottoms", name: "Jogging Club Fleece", brand: "Nike", color: "#d1d5db", accent: "#111827", luxe: false },
+      { id: "b5", cat: "bottoms", name: "Pantalon Double Knee", brand: "Carhartt", color: "#b45309", accent: "#fde68a", luxe: false },
+      { id: "b6", cat: "bottoms", name: "Jean Délavé Large", brand: "American Eagle", color: "#60a5fa", accent: "#dbeafe", luxe: false },
+      { id: "b7", cat: "bottoms", name: "Pantalon Chino Structuré", brand: "Zara", color: "#1f2937", accent: "#6b7280", luxe: false },
+      { id: "b8", cat: "bottoms", name: "Pantalon Droit Souple", brand: "Mango", color: "#475569", accent: "#cbd5e1", luxe: false },
+      { id: "j1", cat: "jackets", name: "Doudoune Nuptse", brand: "The North Face", color: "#111827", accent: "#f3f4f6", luxe: false },
+      { id: "j2", cat: "jackets", name: "Doudoune Maya", brand: "Moncler", color: "#0f172a", accent: "#38bdf8", luxe: true },
+      { id: "j3", cat: "jackets", name: "Veste Detroit Work", brand: "Carhartt", color: "#b45309", accent: "#451a03", luxe: false },
+      { id: "j4", cat: "jackets", name: "Veste Varsity Cuir", brand: "Louis Vuitton", color: "#1e3a8a", accent: "#ffffff", luxe: true },
+      { id: "j5", cat: "jackets", name: "Veste Sherpa Denim", brand: "Levi's", color: "#d97706", accent: "#fef3c7", luxe: false },
+      { id: "j6", cat: "jackets", name: "Veste Zippée Track", brand: "Palm Angels", color: "#7f1d1d", accent: "#ffffff", luxe: true },
+      { id: "j7", cat: "jackets", name: "Veste Re-Nylon", brand: "Prada", color: "#09090b", accent: "#e4e4e7", luxe: true },
+      { id: "j8", cat: "jackets", name: "Blouson Cuir Souple", brand: "Zara", color: "#18181b", accent: "#52525b", luxe: false },
+      { id: "s1", cat: "shoes", name: "Air Jordan 1 High", brand: "Jordan", color: "#dc2626", accent: "#ffffff", luxe: false },
+      { id: "s2", cat: "shoes", name: "Air Force 1 Blanche", brand: "Nike", color: "#ffffff", accent: "#e5e7eb", luxe: false },
+      { id: "s3", cat: "shoes", name: "Dunk Low Panda", brand: "Nike", color: "#111827", accent: "#ffffff", luxe: false },
+      { id: "s4", cat: "shoes", name: "Sneaker 9060", brand: "New Balance", color: "#9ca3af", accent: "#f3f4f6", luxe: false },
+      { id: "s5", cat: "shoes", name: "Samba OG", brand: "Adidas", color: "#f9fafb", accent: "#111827", luxe: false },
+      { id: "s6", cat: "shoes", name: "Track Sneaker", brand: "Balenciaga", color: "#18181b", accent: "#f97316", luxe: true },
+      { id: "s7", cat: "shoes", name: "Boot 6-Inch Miel", brand: "Timberland", color: "#d97706", accent: "#78350f", luxe: false },
+      { id: "s8", cat: "shoes", name: "Chausson Tasman", brand: "UGG", color: "#92400e", accent: "#fef3c7", luxe: false },
+      { id: "s9", cat: "shoes", name: "Chuck 70 Montante", brand: "Converse", color: "#111827", accent: "#ffffff", luxe: false },
+      { id: "s10", cat: "shoes", name: "Gel-Kayano 14", brand: "Asics", color: "#e2e8f0", accent: "#334155", luxe: false },
+      { id: "s11", cat: "shoes", name: "Palermo Suede", brand: "Puma", color: "#15803d", accent: "#facc15", luxe: false },
+      { id: "s12", cat: "shoes", name: "Old Skool Classique", brand: "Vans", color: "#111827", accent: "#ffffff", luxe: false },
+      { id: "so1", cat: "socks", name: "Crew 3 Bandes", brand: "Adidas", color: "#ffffff", accent: "#111827", luxe: false },
+      { id: "so2", cat: "socks", name: "Crew Swoosh Noires", brand: "Nike", color: "#111827", accent: "#ffffff", luxe: false },
+      { id: "so3", cat: "socks", name: "Chaussettes Motif GG", brand: "Gucci", color: "#f5f5f4", accent: "#15803d", luxe: true },
+      { id: "bg1", cat: "bags", name: "Keepall Monogram", brand: "Louis Vuitton", color: "#451a03", accent: "#d97706", luxe: true },
+      { id: "bg2", cat: "bags", name: "Sac à Dos Borealis", brand: "The North Face", color: "#111827", accent: "#9ca3af", luxe: false },
+      { id: "bg3", cat: "bags", name: "Bandoulière Re-Nylon", brand: "Prada", color: "#09090b", accent: "#d4d4d8", luxe: true },
+      { id: "h1", cat: "hats", name: "Bonnet Watch Hat", brand: "Carhartt", color: "#18181b", accent: "#f59e0b", luxe: false },
+      { id: "h2", cat: "hats", name: "Casquette NY", brand: "New Era", color: "#1e3a8a", accent: "#ffffff", luxe: false },
+      { id: "h3", cat: "hats", name: "Bob Re-Nylon", brand: "Prada", color: "#111827", accent: "#e5e7eb", luxe: true },
+      { id: "h4", cat: "hats", name: "Casquette GG", brand: "Gucci", color: "#78350f", accent: "#15803d", luxe: true },
+      { id: "g1", cat: "glasses", name: "Aviator Classique", brand: "Ray-Ban", color: "#0f172a", accent: "#eab308", luxe: false },
+      { id: "g2", cat: "glasses", name: "Wayfarer Noire", brand: "Ray-Ban", color: "#111827", accent: "#374151", luxe: false },
+      { id: "g3", cat: "glasses", name: "Sutro Sport", brand: "Oakley", color: "#1d4ed8", accent: "#38bdf8", luxe: false },
+      { id: "g4", cat: "glasses", name: "Millionaire Or", brand: "Louis Vuitton", color: "#09090b", accent: "#fbbf24", luxe: true },
+      { id: "jw1", cat: "jewelry", name: "Submariner Acier", brand: "Rolex", color: "#0f172a", accent: "#d1d5db", luxe: true },
+      { id: "jw2", cat: "jewelry", name: "G-Shock GA-2100", brand: "Casio", color: "#18181b", accent: "#6b7280", luxe: false },
+      { id: "jw3", cat: "jewelry", name: "Chaîne Cuban Or", brand: "Versace", color: "#eab308", accent: "#fef08a", luxe: true },
+      { id: "jw4", cat: "jewelry", name: "Santos Acier & Or", brand: "Cartier", color: "#d4d4d8", accent: "#eab308", luxe: true }
+    ];
+
+    let app = {
+      cat: "jackets",
+      search: "",
+      brand: "ALL",
+      sort: "default",
+      photo: null,
+      picked: {
+        outfits: null,
+        tops: ITEMS.find(x => x.id === "t1"),
+        bottoms: ITEMS.find(x => x.id === "b1"),
+        jackets: ITEMS.find(x => x.id === "o1"),
+        shoes: ITEMS.find(x => x.id === "s2"),
+        socks: null,
+        bags: null,
+        hats: ITEMS.find(x => x.id === "h1"),
+        glasses: ITEMS.find(x => x.id === "g1"),
+        jewelry: ITEMS.find(x => x.id === "jw2")
+      },
+      sliders: { fit: 100, drape: 70, light: 100 }
+    };
+
+    let historyUndo = [];
+    let historyRedo = [];
+    let savedLooks = JSON.parse(localStorage.getItem("psr_looks") || "[]");
+    let profile = JSON.parse(localStorage.getItem("psr_profile") || '{"name":"","size":"M","setting":"rue urbaine naturelle en lumière de jour"}');
+
+    const canvas = document.getElementById("photoCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function notify(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function initApp() {
+      renderTabs();
+      fillBrands();
+      renderGrid();
+      loadProfile();
+      renderSavedLooks();
+      updatePrompt();
+      drawPhoto();
+
+      document.getElementById("stPieces").textContent = ITEMS.length;
+      document.getElementById("stBrands").textContent = new Set(ITEMS.map(x => x.brand)).size;
+    }
+
+    function renderTabs() {
+      document.getElementById("catTabs").innerHTML = CATS.map(c => `
+        <button class="tab ${app.cat === c.id ? "active" : ""}" onclick="setCat('${c.id}')">
+          <span>${c.icon}</span>
+          <span>${c.name}</span>
+        </button>
+      `).join("");
+    }
+
+    function setCat(id) {
+      app.cat = id;
+      renderTabs();
+      renderGrid();
+    }
+
+    function fillBrands() {
+      const brands = [...new Set(ITEMS.map(x => x.brand))].sort();
+      const sel = document.getElementById("brandSelect");
+      brands.forEach(b => {
+        const o = document.createElement("option");
+        o.value = b;
+        o.textContent = b;
+        sel.appendChild(o);
+      });
+    }
+
+    function renderGrid() {
+      let list = ITEMS.filter(x => x.cat === app.cat);
+      if (app.brand !== "ALL") list = list.filter(x => x.brand === app.brand);
+      if (app.search.trim()) {
+        const q = app.search.toLowerCase();
+        list = list.filter(x => x.name.toLowerCase().includes(q) || x.brand.toLowerCase().includes(q));
+      }
+      if (app.sort === "brand") list.sort((a, b) => a.brand.localeCompare(b.brand));
+      if (app.sort === "luxury") list.sort((a, b) => (b.luxe ? 1 : 0) - (a.luxe ? 1 : 0));
+
+      const grid = document.getElementById("catalogGrid");
+      if (!list.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:24px; color:var(--muted); font-size:12px;">Aucune pièce correspondante.</div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(item => {
+        const active = app.picked[item.cat]?.id === item.id;
+        return `
+          <div class="card ${active ? "active" : ""}" onclick="pickItem('${item.id}')">
+            ${item.luxe ? `<span class="luxe">LUXE</span>` : ""}
+            <div class="swatch" style="background: linear-gradient(135deg, ${item.color} 55%, ${item.accent} 100%);"></div>
+            <div class="c-name">${item.name}</div>
+            <div class="c-brand">${item.brand}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function pushUndo() {
+      historyUndo.push(JSON.stringify(app.picked));
+      if (historyUndo.length > 25) historyUndo.shift();
+      historyRedo = [];
+    }
+
+    function pickItem(id) {
+      const item = ITEMS.find(x => x.id === id);
+      if (!item) return;
+      pushUndo();
+
+      if (app.picked[item.cat]?.id === id) {
+        app.picked[item.cat] = null;
+      } else {
+        app.picked[item.cat] = item;
+        if (item.cat === "outfits") {
+          app.picked.tops = null;
+          app.picked.bottoms = null;
+          app.picked.jackets = null;
+        } else if (["tops", "bottoms", "jackets"].includes(item.cat)) {
+          app.picked.outfits = null;
+        }
+      }
+
+      renderGrid();
+      drawPhoto();
+      updatePrompt();
+    }
+
+    document.getElementById("undoBtn").onclick = () => {
+      if (!historyUndo.length) return notify("Rien à annuler");
+      historyRedo.push(JSON.stringify(app.picked));
+      app.picked = JSON.parse(historyUndo.pop());
+      renderGrid(); drawPhoto(); updatePrompt();
+    };
+
+    document.getElementById("redoBtn").onclick = () => {
+      if (!historyRedo.length) return notify("Rien à rétablir");
+      historyUndo.push(JSON.stringify(app.picked));
+      app.picked = JSON.parse(historyRedo.pop());
+      renderGrid(); drawPhoto(); updatePrompt();
+    };
+
+    document.getElementById("clearBtn").onclick = () => {
+      pushUndo();
+      Object.keys(app.picked).forEach(k => app.picked[k] = null);
+      renderGrid(); drawPhoto(); updatePrompt();
+      notify("Sélection effacée");
+    };
+
+    document.getElementById("photoUpload").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          app.photo = img;
+          document.getElementById("modeBadge").textContent = "📸 Photo Galerie Chargée • Rendu Réaliste";
+          drawPhoto();
+          updatePrompt();
+          notify("Photo importée depuis la galerie");
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function stepSlider(key, delta) {
+      const map = { fit: "sFit", drape: "sDrape", light: "sLight" };
+      const el = document.getElementById(map[key]);
+      const val = Math.min(Number(el.max), Math.max(Number(el.min), Number(el.value) + delta));
+      el.value = val;
+      app.sliders[key] = val;
+      drawPhoto();
+    }
+
+    ["sFit", "sDrape", "sLight"].forEach(id => {
+      document.getElementById(id).addEventListener("input", e => {
+        const k = id === "sFit" ? "fit" : id === "sDrape" ? "drape" : "light";
+        app.sliders[k] = Number(e.target.value);
+        drawPhoto();
+      });
+    });
+
+    document.getElementById("toggleRealism").onclick = () => {
+      document.getElementById("realismBox").classList.toggle("open");
+    };
+
+    function drawPhoto() {
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.filter = `brightness(${app.sliders.light / 100})`;
+
+      if (app.photo) {
+        const r = Math.max(W / app.photo.width, H / app.photo.height);
+        const nw = app.photo.width * r;
+        const nh = app.photo.height * r;
+        ctx.drawImage(app.photo, (W - nw) / 2, (H - nh) / 2, nw, nh);
+      } else {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, "#cbd5e1");
+        g.addColorStop(1, "#64748b");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        const cx = W / 2;
+        ctx.fillStyle = "#4b2e1e";
+        ctx.fillRect(cx - 32, 300, 24, 180);
+        ctx.fillRect(cx + 8, 300, 24, 180);
+        ctx.beginPath();
+        ctx.roundRect(cx - 68, 155, 22, 150, 11);
+        ctx.roundRect(cx + 46, 155, 22, 150, 11);
+        ctx.roundRect(cx - 48, 145, 96, 160, 18);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx, 88, 34, 42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const cx = W / 2;
+      const fitScale = app.sliders.fit / 100;
+      const drapeAlpha = (app.sliders.drape / 100) * 0.25;
+
+      ctx.save();
+      ctx.translate(cx, 260);
+      ctx.scale(fitScale, 1);
+      ctx.translate(-cx, -260);
+
+      const p = app.picked;
+      const bottom = p.outfits || p.bottoms;
+      const top = p.outfits || p.tops;
+      const jacket = p.outfits || p.jackets;
+
+      if (bottom) {
+        ctx.fillStyle = bottom.color;
+        ctx.beginPath();
+        ctx.roundRect(cx - 42, 290, 38, 180, 8);
+        ctx.roundRect(cx + 4, 290, 38, 180, 8);
+        ctx.fill();
+        ctx.fillStyle = `rgba(0,0,0,${drapeAlpha})`;
+        ctx.fillRect(cx - 42, 290, 84, 180);
+      }
+
+      if (p.shoes) {
+        ctx.fillStyle = p.shoes.color;
+        ctx.beginPath();
+        ctx.roundRect(cx - 45, 464, 41, 22, 8);
+        ctx.roundRect(cx + 4, 464, 41, 22, 8);
+        ctx.fill();
+      }
+
+      if (top) {
+        ctx.fillStyle = top.color;
+        ctx.beginPath();
+        ctx.roundRect(cx - 49, 145, 98, 152, 14);
+        ctx.fill();
+        ctx.fillStyle = `rgba(0,0,0,${drapeAlpha})`;
+        ctx.fillRect(cx - 49, 145, 98, 152);
+      }
+
+      if (jacket) {
+        ctx.fillStyle = jacket.color;
+        if (p.tops && !p.outfits) {
+          ctx.beginPath();
+          ctx.roundRect(cx - 54, 144, 38, 156, 12);
+          ctx.roundRect(cx + 16, 144, 38, 156, 12);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(cx - 54, 144, 108, 156, 14);
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.roundRect(cx - 72, 148, 22, 148, 11);
+        ctx.roundRect(cx + 50, 148, 22, 148, 11);
+        ctx.fill();
+      }
+
+      if (p.hats) {
+        ctx.fillStyle = p.hats.color;
+        ctx.beginPath();
+        ctx.ellipse(cx, 54, 35, 22, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.roundRect(cx - 36, 48, 72, 12, 6);
+        ctx.fill();
+      }
+
+      if (p.glasses) {
+        ctx.fillStyle = p.glasses.color;
+        ctx.strokeStyle = p.glasses.accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(cx - 26, 77, 22, 12, 4);
+        ctx.roundRect(cx + 4, 77, 22, 12, 4);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function updatePrompt() {
+      const chosen = Object.values(app.picked).filter(Boolean).map(x => `${x.name} ${x.brand}`);
+      const outfitTxt = chosen.length ? chosen.join(", ") : "tenue décontractée réelle";
+      const refTxt = app.photo ? "en conservant l'identité, le visage et la posture de la photo importée, " : "portrait réaliste d'une vraie personne, ";
+      const text = `Photographie authentique prise au reflex 50mm, ${refTxt}portant ${outfitTxt} en taille ${profile.size || "M"}, tissus réels avec plis naturels et ombres cohérentes, décor ${profile.setting}, rendu photographique naturel sans aspect dessin ni avatar.`;
+      document.getElementById("livePrompt").textContent = text;
+    }
+
+    document.getElementById("generateRealBtn").onclick = () => {
+      updatePrompt();
+      const promptTxt = document.getElementById("livePrompt").textContent;
+      navigator.clipboard?.writeText(promptTxt);
+      document.getElementById("modeBadge").textContent = "✨ Prompt Photo Prêt & Copié • Onglet Historique";
+      notify("Prompt photo-réaliste copié ! Colle-le dans ton générateur d'images.");
+    };
+
+    document.getElementById("copyPromptBtn").onclick = () => {
+      navigator.clipboard?.writeText(document.getElementById("livePrompt").textContent);
+      notify("Prompt copié !");
+    };
+
+    document.getElementById("saveBtn").onclick = () => {
+      const entry = {
+        id: Date.now(),
+        date: new Date().toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
+        img: canvas.toDataURL("image/png"),
+        labels: Object.values(app.picked).filter(Boolean).map(x => `${x.brand} ${x.name}`),
+        snap: JSON.parse(JSON.stringify(app.picked))
+      };
+      savedLooks.unshift(entry);
+      localStorage.setItem("psr_looks", JSON.stringify(savedLooks));
+      renderSavedLooks();
+      notify("✅ Photo enregistrée dans l'historique");
+    };
+
+    document.getElementById("exportBtn").onclick = () => {
+      const a = document.createElement("a");
+      a.download = `PhotoProfil_${Date.now()}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+      notify("⬇️ Image exportée");
+    };
+
+    function renderSavedLooks() {
+      document.getElementById("stSaved").textContent = savedLooks.length;
+      const box = document.getElementById("historyList");
+      if (!savedLooks.length) {
+        box.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--muted); font-size:12px;">Aucune photo enregistrée pour le moment.</div>`;
+        return;
+      }
+      box.innerHTML = savedLooks.map((e, i) => `
+        <div class="h-card">
+          <img src="${e.img}" alt="Création" />
+          <div class="h-body">
+            <div class="h-date">${e.date}</div>
+            <div class="h-items">${(e.labels.length ? e.labels : ["Look de base"]).slice(0, 3).join(" • ")}</div>
+            <div style="display:flex; gap:5px; margin-top:3px;">
+              <button class="btn btn-primary" style="flex:1; padding:5px; font-size:11px; justify-content:center;" onclick="loadLook(${i})">Utiliser</button>
+              <button class="btn btn-secondary" style="padding:5px 8px; font-size:11px;" onclick="delLook(${i})">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function loadLook(i) {
+      pushUndo();
+      app.picked = JSON.parse(JSON.stringify(savedLooks[i].snap));
+      renderGrid(); drawPhoto(); updatePrompt();
+      showView("view-studio");
+      notify("Tenue chargée");
+    }
+
+    function delLook(i) {
+      savedLooks.splice(i, 1);
+      localStorage.setItem("psr_looks", JSON.stringify(savedLooks));
+      renderSavedLooks();
+      notify("Supprimé");
+    }
+
+    function loadProfile() {
+      document.getElementById("pName").value = profile.name || "";
+      document.getElementById("pSize").value = profile.size || "M";
+      document.getElementById("pSetting").value = profile.setting || "rue urbaine naturelle en lumière de jour";
+    }
+
+    document.getElementById("saveProfileBtn").onclick = () => {
+      profile = {
+        name: document.getElementById("pName").value,
+        size: document.getElementById("pSize").value,
+        setting: document.getElementById("pSetting").value
+      };
+      localStorage.setItem("psr_profile", JSON.stringify(profile));
+      updatePrompt();
+      notify("Profil enregistré");
+    };
+
+    function showView(id) {
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.view === id));
+    }
+
+    document.querySelectorAll(".nav-item").forEach(n => {
+      n.onclick = () => showView(n.dataset.view);
+    });
+
+    document.getElementById("searchBox").oninput = e => { app.search = e.target.value; renderGrid(); };
+    document.getElementById("brandSelect").onchange = e => { app.brand = e.target.value; renderGrid(); };
+    document.getElementById("sortSelect").onchange = e => { app.sort = e.target.value; renderGrid(); };
+
+    initApp();
+  </script>
+</body>
+</html>
